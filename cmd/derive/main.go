@@ -24,7 +24,7 @@ func credentials() (string, string, error) {
 		}
 	}
 
-	fmt.Fprint(os.Stderr, "\nEnter Password: ")
+	fmt.Fprintln(os.Stderr, "Enter Password: ")
 	bytesPassword, err := terminal.ReadPassword(int(syscall.Stdin))
 	if err != nil {
 		return "", "", err
@@ -34,16 +34,22 @@ func credentials() (string, string, error) {
 }
 
 var (
-	keyLen    int
-	kdfRounds int
-	kdfHash   string
+	keyLen     int
+	kdfRounds  int
+	kdfHash    string
+	kdfPurpose string
+	keyVersion string
 )
 
 func init() {
 	flag.IntVar(&keyLen, "b", 32, "length of derived key in bytes")
 	flag.IntVar(&kdfRounds, "c", 4096, "rounds for deriving key")
 	flag.StringVar(&kdfHash, "h", "sha512", "hash function for deriving key")
+	flag.StringVar(&keyVersion, "v", "v0", "'versioned' key ")
 	flag.Parse()
+	if flag.NArg() == 1 {
+		kdfPurpose = flag.Arg(0)
+	}
 }
 
 func main() {
@@ -54,7 +60,11 @@ func main() {
 	var dk []byte
 	switch kdfHash {
 	default:
-		dk = pbkdf2.Key([]byte(pass), []byte(salt), kdfRounds, keyLen, sha512.New)
+		dk = pbkdf2.Key(
+			[]byte(pass),
+			[]byte(fmt.Sprintf("%s:%s:%s:", kdfPurpose, keyVersion, salt)),
+			kdfRounds,
+			keyLen, sha512.New)
 
 	}
 	fmt.Fprintf(os.Stdout, "\n%s", base64.RawStdEncoding.EncodeToString(dk))
