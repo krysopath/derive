@@ -14,10 +14,13 @@ import (
 )
 
 func credentials() (string, string, error) {
-	fmt.Fprint(os.Stderr, "Enter Salt: ")
-	bytesSalt, err := terminal.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		return "", "", err
+	salt := []byte(os.Getenv("DERIVE_SALT"))
+	if len(salt) < 16 {
+		fmt.Fprint(os.Stderr, "Enter Salt: ")
+		bytesSalt, err := terminal.ReadPassword(int(syscall.Stdin))
+		if err != nil {
+			return "", "", err
+		}
 	}
 
 	fmt.Fprint(os.Stderr, "\nEnter Password: ")
