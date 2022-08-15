@@ -14,12 +14,14 @@ EOF
 source ~/.bashrc
 ```
 
+> we assume your ssh-agent is properly setup
+
 ## usage
 
 ```
-$ derive -b 32 [purpose]
+derive [FLAGS] [purpose]
 
-Usage of derive:
+FLAGS:
   -b int
     	length of derived key in bytes (default 32)
   -c int
@@ -34,6 +36,16 @@ Usage of derive:
     	'versioned' key  (default "1000")
 
 ```
+
+simple run:
+```
+$ derive -b 12 -f hex
+! Enter Secret Token (hold Yubikey 5secs) ...OK
+16F61AD0160EE71CAC668FC3
+```
+
+> consider using `| xclip -i -selection clipboard` to capture the results
+
 
 ### ssh private keys with passphrases unlocking autmatically?
 
@@ -64,4 +76,4 @@ add_keyfile_to_agent() {
 
 > this invocation derives a key and passes it via the SSH_ASKPASS script into ssh-add
 
-> this method leaves no passprhrases on disk and does not use secrets in command arguments just in pipes
+> this method leaves no passphrases on disk and does not disclose exec arguments in `ps`
