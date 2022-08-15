@@ -1,51 +1,33 @@
 package main
 
 import (
-	"crypto/sha512"
 	"encoding/base64"
 	"flag"
 	"fmt"
 	"os"
-	"strings"
-	"syscall"
 
-	"golang.org/x/crypto/pbkdf2"
-	"golang.org/x/crypto/ssh/terminal"
+	"github.com/krysopath/derive/app"
+	"github.com/krysopath/derive/inputs"
+	"github.com/krysopath/derive/kdf"
 )
 
-func credentials() (string, string, error) {
-	bytesSalt := []byte(os.Getenv("DERIVE_SALT"))
-	if len(bytesSalt) < 16 {
-		fmt.Fprint(os.Stderr, "ENV value not sufficient. Enter Salt: ")
-		var err error
-		bytesSalt, err = terminal.ReadPassword(int(syscall.Stdin))
-		if err != nil {
-			return "", "", err
-		}
-	}
-
-	fmt.Fprintln(os.Stderr, "Enter Password: ")
-	bytesPassword, err := terminal.ReadPassword(int(syscall.Stdin))
-	if err != nil {
-		return "", "", err
-	}
-
-	return strings.TrimSpace(string(bytesSalt)), strings.TrimSpace(string(bytesPassword)), nil
-}
-
 var (
-	keyLen     int
-	kdfRounds  int
-	kdfHash    string
-	kdfPurpose string
-	keyVersion string
+	keyLen       int
+	kdfRounds    int
+	kdfFunction  string
+	kdfHash      string
+	kdfPurpose   string
+	keyVersion   string
+	outputFormat string
 )
 
 func init() {
 	flag.IntVar(&keyLen, "b", 32, "length of derived key in bytes")
 	flag.IntVar(&kdfRounds, "c", 4096, "rounds for deriving key")
-	flag.StringVar(&kdfHash, "h", "sha512", "hash function for deriving key")
-	flag.StringVar(&keyVersion, "v", "v0", "'versioned' key ")
+	flag.StringVar(&kdfHash, "h", "sha512", "hash for kdf function")
+	flag.StringVar(&kdfFunction, "k", "pbkdf2", "kdf function for deriving key")
+	flag.StringVar(&keyVersion, "v", "1000", "'versioned' key ")
+	flag.StringVar(&outputFormat, "f", "bytes", "key output format: bytes|b64|hex|ascii")
 	flag.Parse()
 	if flag.NArg() == 1 {
 		kdfPurpose = flag.Arg(0)
@@ -53,19 +35,31 @@ func init() {
 }
 
 func main() {
-	salt, pass, err := credentials()
+	salt, pass, err := inputs.Credentials()
 	if err != nil {
 		panic(err)
 	}
 	var dk []byte
-	switch kdfHash {
-	default:
-		dk = pbkdf2.Key(
-			[]byte(pass),
-			[]byte(fmt.Sprintf("%s:%s:%s:", kdfPurpose, keyVersion, salt)),
-			kdfRounds,
-			keyLen, sha512.New)
-
+	switch kdfFunction {
+	case "pbkdf2":
+		dk = kdf.NewPBKDF2(kdf.PBKDF2Opts{
+			Passphrase: pass,
+			Salt:       salt,
+			Purpose:    kdfPurpose,
+			Version:    keyVersion,
+			Rounds:     kdfRounds,
+			KeyLen:     keyLen * 2,
+		})
 	}
-	fmt.Fprintf(os.Stdout, "\n%s", base64.RawStdEncoding.EncodeToString(dk))
+	switch outputFormat {
+	case "ascii":
+		fmt.Fprintf(os.Stdout, "\n%s", app.Coerce(dk, keyLen))
+	case "hex":
+		fmt.Fprintf(os.Stdout, "\n%X", dk)
+	case "base64":
+		fmt.Fprintf(os.Stdout, "\n%s", base64.RawStdEncoding.EncodeToString(dk))
+	default:
+		fmt.Fprintf(os.Stdout, "\n%s", dk)
+	}
+
 }
