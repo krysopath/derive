@@ -8,7 +8,7 @@ A
 
 ```
 DERIVE_SALT=$(openssl rand 32)
-go install github.com/krysopath/derive/cmd/derive@v0.1.3
+go install github.com/krysopath/derive/cmd/derive@v0
 cat <<EOF >> ~/.bashrc
 export DERIVE_SALT=$DERIVE_SALT
 EOF
