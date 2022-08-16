@@ -38,6 +38,17 @@ than keys without encryption passphrase.
 - better even: use a dedicated crypto host and smartcards for when it matters!
 
 
+## roadmap
+
+- a better method to receive a kdf result
+    - to not leak the secret to the consumer OS
+    - but run a KDF inside the smartcard, with a secret from the smartcard
+- statefile for count of operations per key topic
+- blinking yubikey lights
+- more KDF juice
+- when outputting as ascii, it might happen that several hundred bytes of input do not contain printable characters, this MUST be mitigated
+- audit
+
 ## installation
 
 ```
@@ -93,14 +104,24 @@ $ derive -b 12 -f hex
 
 ### derive with yubikey?
 
-Yes, you need to configure slot 2 for emitting a static secret.
+Yes, you need to configure slot 2 for emitting a static secret:
+
+`ykman otp static --generate --length 38  --keyboard-layout US 2`
+
+> maxlength is 38 bytes
+
+> slot 1 hosts u2f, lets not overwrite it.
+
+> static OTP bytes are static :.(
+
 
 - Such a static key has no smooth rotation
 - if it leaked once (remember it is emitted plaintext stdout), then your secrets are void
-- together with `derive` that static key can be used to derive many keys
-- at the same time it prevents disclosure of that key by accidental stdout shell
+- though together with `derive` that static key can be used to derive many more keys
+- and at the same time it prevents disclosure of that key by accidental stdout shell
   blooper (because it emits after a long press and is hashed)
 - You only trust your host, not a remote system.
+- However you trust your host enough with your static key. This is always a risk.
 - Be sure to disable the static code feature for the NFC channel tho. Would be embarassing.
 - Be sure to keep a backup rubberduck, yubikey or else with the same static
   key, else it would embarassing too.
