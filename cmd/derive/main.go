@@ -20,9 +20,21 @@ var (
 	kdfPurpose   string
 	keyVersion   string
 	outputFormat string
+	version      string
 )
 
 func init() {
+	flag.Usage = func() {
+		w := flag.CommandLine.Output()
+		fmt.Fprintf(
+			w,
+			"derive %s: This is not helpful.\n\nderive [FLAGS] [topic]\n\nFlags:\n", version,
+		)
+		flag.VisitAll(func(f *flag.Flag) {
+			fmt.Fprintf(w, "\t[-%s %s] \t%v\n", f.Name, f.Value, f.Usage)
+		})
+	}
+
 	flag.IntVar(&keyLen, "b", 32, "length of derived key in bytes")
 	flag.IntVar(&kdfRounds, "c", 4096, "rounds for deriving key")
 	flag.StringVar(&kdfHash, "h", "sha512", "hash for kdf function")
