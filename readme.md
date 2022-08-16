@@ -30,11 +30,12 @@ than keys without encryption passphrase.
 
 
 - This tool can derive new keys based on salt and secret key factors via pbkdf2.
-- Use if you cant place a key on smartcard, but want also dont want to use
-  passwordless keys
-- Programmatically create encrypted key material in pipelines
+- Use if you cant place a key on smartcard, but also dont want to use passwordless 
+  keys
+- Programmatically create and use encrypted key material in pipelines
 - Avoid communicating secret passphrases between departments. Procedurally
   derive one twice.
+- better even: use a dedicated crypto host and smartcards for when it matters!
 
 
 ## installation
@@ -89,6 +90,20 @@ $ derive -b 12 -f hex
 > a master password can be remembered and concatened with the rubberduck static key, too!
 
 > consider using `| xclip -i -selection clipboard` to capture the results
+
+### derive with yubikey?
+
+Yes, you need to configure slot 2 for emitting a static secret.
+
+- Such a static key has no smooth rotation
+- if it leaked once (remember it is emitted plaintext stdout), then your secrets are void
+- together with `derive` that static key can be used to derive many keys
+- at the same time it prevents disclosure of that key by accidental stdout shell
+  blooper (because it emits after a long press and is hashed)
+- You only trust your host, not a remote system.
+- Be sure to disable the static code feature for the NFC channel tho. Would be embarassing.
+- Be sure to keep a backup rubberduck, yubikey or else with the same static
+  key, else it would embarassing too.
 
 
 ### secure ssh pkeys with phrases unlocking automatically?
