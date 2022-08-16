@@ -1,8 +1,41 @@
 # derive 
 
 A
+
 > hollow anti token container wrapping noise
-^based on true randomness
+
+based on true random wisdom from `xkcd-pass`
+
+The idea of this is to implement a scriptable way for adding secret keys to
+keyring agents. Solutions recommended on the web often forget, that on
+multiuser systems the process tree discloses command arguments to every logged
+user. They may end up in remote logs and endanger your private keys. Also it is
+not a solution to write key pass phrases into config files. However a fair
+amount of this sin has been committed. Even by accident, it may happen that an
+encrypted file is not encrypted properly on disk and then checked into source
+control. In infrastructure teams often passwordless and shared private keys are
+used. These are all desaster scenarios or severe anti pattern.
+
+It is recommended to setup an ssh-agent securely, such that it integrates into
+the os keyring system. People can choose to even integrate a smartcard to host
+the private keys. But how to deal with private keys, that can not be hosted as
+such? You absolutely should store them encrypted (that means they have a
+passphrase guarding their usage)
+
+However supplying passphrases to private keys when they are added to the agent
+is a manual effort. The default tooling is build for interactive input. The
+goal of this project is to find a way to programmatically derive key phrases in
+such a way that they can be fed to ssh-agent. This method should be more secure
+than keys without encryption passphrase.
+
+
+- This tool can derive new keys based on salt and secret key factors via pbkdf2.
+- Use if you cant place a key on smartcard, but want also dont want to use
+  passwordless keys
+- Programmatically create encrypted key material in pipelines
+- Avoid communicating secret passphrases between departments. Procedurally
+  derive one twice.
+
 
 ## installation
 
@@ -45,6 +78,15 @@ $ derive -b 12 -f hex
 ! Enter Secret Token (hold Yubikey 5secs) ...OK
 16F61AD0160EE71CAC668FC3
 ```
+> `derive` reads a salt from the environment and waits for a newline character
+> on `/dev/stdin`. It uses those values and the passed arguments to derive a
+> key and emit it to `dev/stdout
+
+> the author used a usb HID rubberduck to output a static secret string
+
+> a yubikey may be programmed to emit a static key of 38 bytes via HID
+
+> a master password can be remembered and concatened with the rubberduck static key, too!
 
 > consider using `| xclip -i -selection clipboard` to capture the results
 
@@ -59,13 +101,15 @@ create `$HOME/bin/ssh_give_pass.sh`
 cat <<EOF> ~/bin/ssh_give_pass.sh
 #!/bin/bash
 cat
-EOC
+EOF
 ```
-> a script like an echo server: `cat /dev/stdin > /dev/stdout`
+> magic script is implementing the API of /bin/cat, like an echo server: `cat </dev/stdin >/dev/stdout`
 
+> key derivation could happen in here, but would be less flexible then.
 
-add the shell function below to `.bashrc` e.g.
+After you add this shell function below to `.bashrc` e.g.
 ```
+cat <<EOF>> ~/.bashrc
 add_keyfile_to_agent() {
     if [ -n "$1" -a -r "$1" ]; then
         derive -b 32 \
@@ -74,9 +118,13 @@ add_keyfile_to_agent() {
         | DISPLAY=:0 SSH_ASKPASS=$HOME/bin/ssh_give_pass.sh ssh-add $1
     fi
 }
-```
+EOF
 
-> this function will try to open a private key file and it to the ssh-agent
+# source and run
+source ~/.bashrc
+add_keyfile_to_agent ~/.ssh/id_rsa
+```
+> this function will try to open a private key file and add it to the ssh-agent
 
 > this invocation derives a key and passes it via the SSH_ASKPASS script into ssh-add
 
