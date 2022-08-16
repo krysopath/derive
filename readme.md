@@ -162,11 +162,11 @@ After you add this shell function below to `.bashrc` e.g.
 ```
 cat <<EOF>> ~/.bashrc
 add_keyfile_to_agent() {
-    if [ -n "$1" -a -r "$1" ]; then
-        derive -b 32 \
-            -f base64 \
-            -v $(basename $1) ssh \
-        | DISPLAY=:0 SSH_ASKPASS=$HOME/bin/ssh_give_pass.sh ssh-add $1
+    if [ -n "\$1" -a -r "\$1" ]; then
+        derive -b 32 \\
+            -f base64 \\
+            -v \$(basename $1) ssh \\
+        | DISPLAY=:0 SSH_ASKPASS=\$HOME/bin/ssh_give_pass.sh ssh-add \$1
     fi
 }
 EOF
