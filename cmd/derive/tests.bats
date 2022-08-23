@@ -63,3 +63,50 @@
   [ "$?" -eq 0  ] 
   [ "$value" -eq "$goal" ]  || { echo ERR: \"$value\" not matching \"$goal\"; exit 1; }
 }
+@test run_derive_hex_length_16 {
+  export DERIVE_SALT="0123456789abcdef"
+  goal=$(( 16 * 2 + 1 ))
+  value=$(echo -e "secret\n" | ./derive -b 16 -f hex|wc -c)
+  [ "$?" -eq 0  ] 
+  [ "$value" -eq "$goal" ]  || { echo ERR: \"$value\" not matching \"$goal\"; exit 1; }
+}
+
+@test run_derive_hex_length_92 {
+  export DERIVE_SALT="0123456789abcdef"
+  goal=$(( 92 * 2 + 1))
+  value=$(echo -e "secret\n" | ./derive -b 92 -f hex | wc -c)
+  [ "$?" -eq 0  ] 
+  [ "$value" -eq "$goal" ]  || { echo ERR: \"$value\" not matching \"$goal\"; exit 1; }
+}
+
+@test run_derive_slot {
+  export DERIVE_SALT="0123456789abcdef"
+  goal=708F7B72AE20323413A49D86807606C6
+  value=$(echo -e "secret\n" | ./derive -b 16 -f hex slot:thing:this)
+  [ "$?" -eq 0  ] 
+  [ "$value" = "$goal" ]  || { echo ERR: \"$value\" not matching \"$goal\"; exit 1; }
+}
+
+@test run_derive_slot_version {
+  export DERIVE_SALT="0123456789abcdef"
+  goal=5E5F455715FE16BD95D067AE4BE12543
+  value=$(echo -e "secret\n" | ./derive -b 16 -f hex -v 99 slot:thing:this)
+  [ "$?" -eq 0  ] 
+  [ "$value" = "$goal" ]  || { echo ERR: \"$value\" not matching \"$goal\"; exit 1; }
+}
+
+@test run_derive_slot_2version_ne {
+  export DERIVE_SALT="0123456789abcdef"
+  value1=$(echo -e "secret\n" | ./derive -b 16 -f hex -v 98 slot:thing:this)
+  value2=$(echo -e "secret\n" | ./derive -b 16 -f hex -v 99 slot:thing:this)
+  [ "$?" -eq 0  ] 
+  [ "$value1" != "$value2" ]  || { echo ERR: \"$value1\" must not be equal to \"$value2\"; exit 1; }
+}
+
+@test run_derive_2slot_ne {
+  export DERIVE_SALT="0123456789abcdef"
+  value1=$(echo -e "secret\n" | ./derive -b 16 -f hex -v 99 slot:thing:this)
+  value2=$(echo -e "secret\n" | ./derive -b 16 -f hex -v 99 slot:thing:else)
+  [ "$?" -eq 0  ] 
+  [ "$value1" != "$value2" ]  || { echo ERR: \"$value1\" must not be equal to \"$value2\"; exit 1; }
+}
