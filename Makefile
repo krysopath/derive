@@ -3,28 +3,36 @@ SEMVERS = $(shell echo $(TAG) | semver)
 
 major:
 	@set -e;\
-	export major=$$(( $$(echo '$(SEMVERS)'|jq -r .major|sed 's/^v//') + 1 )); \
-	git tag -m "v$$major.0.0 major release" --sign v$$major.0.0
+	export NEW=$$(echo $(TAG) | semver -release major| jq .canonical); \
+	git tag -m "$$NEW major release" $$NEW
 minor:
 	@set -e;\
-	export major=$$(( $$(echo '$(SEMVERS)'|jq -r .major|sed 's/^v//') + 0 )); \
-	export minor=$$(( $$(echo '$(SEMVERS)' | jq -r .majorminor | sed -e 's/^v[0-9]*\.//' -e 's/\.[0-9]$$//' ) + 1 ));\
-	export patch=$$(( $$(echo '$(SEMVERS)' | jq -r .canonical|sed 's/^v[0-9]*\.[0-9]*\.//') + 0 ));\
-	git tag -m "v$$major.$$minor.$$patch minor release" --sign v$$major.$$minor.$$patch
+	export NEW=$$(echo $(TAG) | semver -release minor| jq .canonical); \
+	echo git tag -m "$$NEW minor release" $$NEW
 patch:
 	@set -e;\
-	export major=$$(( $$(echo '$(SEMVERS)'|jq -r .major|sed 's/^v//') + 0 )); \
-	export minor=$$(( $$(echo '$(SEMVERS)' | jq -r .majorminor | sed -e 's/^v[0-9]*\.//' -e 's/\.[0-9]$$//' ) + 0 ));\
-	export patch=$$(( $$(echo '$(SEMVERS)' | jq -r .canonical|sed 's/^v[0-9]*\.[0-9]*\.//') + 1 ));\
-	git tag -m "v$$major.$$minor.$$patch patch fix" --sign v$$major.$$minor.$$patch
+	export NEW=$$(echo $(TAG) | semver -release patch| jq .canonical); \
+	echo git tag -m "$$NEW patch release" $$NEW
 
 semver:
-	git tag -f -m '$(TAG)' --sign $$(echo '$(SEMVERS)' | jq -r .major)
-	git tag -f -m '$(TAG)' --sign $$(echo '$(SEMVERS)' | jq -r .majorminor)
+	git tag -f -m '$(TAG)' "$$(echo '$(SEMVERS)' | jq -r .major)"
+	git tag -f -m '$(TAG)' "$$(echo '$(SEMVERS)' | jq -r .majorminor)"
 
 release:
 	git push
 	git push --tags -f
 
-install:
+gotests:
+	go test ./...
+
+gobuild:
+	go build ./cmd/...; \
+
+SHELL = /bin/bash
+tests: gotests gobuild
+	@shopt -s extglob; \
+	echo -e "BATS are testing it now\n"; \
+	for bat in ./cmd/**/*bats; do bats $$bat||{ head -n 6 $$bat; echo err:$$bat; exit 1; }; done; \
+
+install: tests
 	go install -trimpath -ldflags='-extldflags=-static -w -s -X main.version=$(TAG)' ./cmd/...
