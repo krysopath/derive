@@ -28,11 +28,11 @@ gotests:
 gobuild:
 	go build ./cmd/...; \
 
-SHELL = /bin/bash
 tests: gotests gobuild
-	@shopt -s extglob; \
-	echo -e "BATS are testing it now\n"; \
-	for bat in ./cmd/**/*bats; do bats $$bat||{ head -n 6 $$bat; echo err:$$bat; exit 1; }; done; \
+	@printf "BATS are testing it now\n"; \
+	for bat in $$(find . -name '*.bats'); do \
+		bats $$bat || { head -n 6 $$bat; echo err:$$bat; exit 1; }; \
+	done;
 
 install: tests
 	go install -trimpath -ldflags='-extldflags=-static -w -s -X main.version=$(TAG)' ./cmd/...
