@@ -16,6 +16,19 @@
   [ "$status" -eq 2  ]
 }
 
+@test run_derive_unknown_kdf_and_fail {
+  export DERIVE_SALT="0123456789abcdef"
+  value="$(echo -e "secret\n" | ./derive -k nil; echo $?)"
+  [ "$value" -eq 2  ] 
+}
+
+@test run_derive_unknown_hash_and_fail {
+  export DERIVE_SALT="0123456789abcdef"
+  value=$(echo -e "secret\n" | ./derive -h nil; echo $?)
+  [ "$value" -eq 2  ] 
+}
+
+
 @test run_derive_hex {
   export DERIVE_SALT="0123456789abcdef"
   goal='66B43A1E74FEFFF062F06B2CFE8E65F7ABC51094BB13AD11A8BC1D1BBB52166B'
