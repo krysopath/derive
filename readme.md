@@ -38,6 +38,27 @@ than keys without encryption passphrase.
 - better even: use a dedicated crypto host and smartcards for when it matters!
 
 
+## installation
+### go
+
+```
+go install github.com/krysopath/derive/cmd/derive@v1
+```
+
+### compile
+
+```
+git clone git@github.com:krysopath/derive.git
+cd derive
+
+# checking deps for build
+make deps
+
+# testing and building and installing code in  workdir
+make install
+```
+
+
 ## roadmap
 
 - a better method to receive a kdf result
@@ -64,11 +85,11 @@ than keys without encryption passphrase.
 - suggest expected usecases
 - `<3`
 
-## installation
+## setup
 
 ```
 DERIVE_SALT=$(openssl rand -base64 48)
-go install github.com/krysopath/derive/cmd/derive@v0
+go install github.com/krysopath/derive/cmd/derive@v1
 cat <<EOF >> ~/.bashrc
 export DERIVE_SALT=$DERIVE_SALT
 EOF
