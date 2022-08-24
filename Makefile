@@ -33,3 +33,4 @@ tests: gotests gobuild
 	done;
 install: tests
 	go install -trimpath -ldflags='-extldflags=-static -w -s -X main.version=$(TAG)' ./cmd/...
+	@bash -c "[ $$(git diff $(TAG) -- **/*.bats | wc -c) -eq 0 ]" || echo "!!! breaking changes"
