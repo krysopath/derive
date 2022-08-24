@@ -5,20 +5,41 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/signal"
 	"strings"
+	"syscall"
 
 	"golang.org/x/crypto/ssh/terminal"
+	"golang.org/x/term"
 )
 
-func readPassword(prompt string) (pw []byte, err error) {
-	fd := int(os.Stdin.Fd())
-	if terminal.IsTerminal(fd) {
-		fmt.Fprint(os.Stderr, prompt)
-		pw, err = terminal.ReadPassword(fd)
-		fmt.Fprintln(os.Stderr)
-		return
+func readFromTerminal(fd int, prompt string) (pw []byte, err error) {
+	stdin := int(syscall.Stdin)
+	oldState, errTerm := term.GetState(stdin)
+	if errTerm != nil {
+		return []byte(""), err
 	}
 
+	// restores terminal explicitly (echo input to stdout again)
+	defer term.Restore(stdin, oldState)
+
+	sigch := make(chan os.Signal, 1)
+	signal.Notify(sigch, os.Interrupt)
+	go func() {
+		for _ = range sigch {
+			// if SIGINT is received we must restore terminal
+			term.Restore(stdin, oldState)
+			os.Exit(1)
+		}
+	}()
+
+	fmt.Fprint(os.Stderr, prompt)
+	pw, err = terminal.ReadPassword(fd)
+	fmt.Fprintln(os.Stderr)
+	return pw, err
+}
+
+func readFromStdin() (pw []byte, err error) {
 	var b [1]byte
 	for {
 		n, err := os.Stdin.Read(b[:])
@@ -43,6 +64,15 @@ func readPassword(prompt string) (pw []byte, err error) {
 			return pw, err
 		}
 	}
+}
+
+func readPassword(prompt string) ([]byte, error) {
+	fd := int(os.Stdin.Fd())
+	if terminal.IsTerminal(fd) {
+		return readFromTerminal(fd, prompt)
+	}
+	return readFromStdin()
+
 }
 
 func Credentials() (string, string, error) {
