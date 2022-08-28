@@ -58,11 +58,11 @@ func main() {
 	case "ascii":
 		fmt.Fprintf(os.Stdout, "%s", app.Coerce(dk, keyLen))
 	case "hex":
-		fmt.Fprintf(os.Stdout, "%X", dk)
+		fmt.Fprintf(os.Stdout, "%X", dk[:keyLen])
 	case "base64":
-		fmt.Fprintf(os.Stdout, "%s", base64.RawStdEncoding.EncodeToString(dk))
+		fmt.Fprintf(os.Stdout, "%s", base64.RawStdEncoding.EncodeToString(dk[:keyLen]))
 	default:
-		fmt.Fprintf(os.Stdout, "%s", dk)
+		fmt.Fprintf(os.Stdout, "%s", dk[:keyLen])
 	}
 
 }
