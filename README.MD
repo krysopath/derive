@@ -1,6 +1,8 @@
 # derive 
 
-> a simple kdf cli utility
+A
+> hollow anti token container wrapping noise
+^based on true randomness
 
 ## installation
 
@@ -47,7 +49,10 @@ $ derive -b 12 -f hex
 > consider using `| xclip -i -selection clipboard` to capture the results
 
 
-### ssh private keys with passphrases unlocking autmatically?
+### secure ssh pkeys with phrases unlocking automatically?
+
+> quickly, hold your terminals!
+
 
 create `$HOME/bin/ssh_give_pass.sh`
 ```
@@ -55,7 +60,6 @@ cat <<EOF> ~/bin/ssh_give_pass.sh
 #!/bin/bash
 cat
 EOC
-
 ```
 > a script like an echo server: `cat /dev/stdin > /dev/stdout`
 
@@ -77,3 +81,5 @@ add_keyfile_to_agent() {
 > this invocation derives a key and passes it via the SSH_ASKPASS script into ssh-add
 
 > this method leaves no passphrases on disk and does not disclose exec arguments in `ps`
+
+
