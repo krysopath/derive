@@ -23,11 +23,14 @@ func (cfg *Config) Run(
 	kdfFunction, kdfHash, kdfPurpose, keyVersion, outputFormat string,
 	kdfRounds, keyLen int,
 ) string {
+
 	salt, pass, err := inputs.Credentials()
 	if err != nil {
 		panic(err)
 	}
+
 	var dk []byte
+
 	switch kdfFunction {
 	case "pbkdf2":
 		dk = kdf.NewPBKDF2(kdf.PBKDF2Opts{
@@ -37,10 +40,12 @@ func (cfg *Config) Run(
 			Version:    keyVersion,
 			Rounds:     kdfRounds,
 			KeyLen:     keyLen * 2,
+			Hash:       kdfHash,
 		})
 	default:
 		panic(fmt.Sprintf("err: unknown kdf: %s", kdfFunction))
 	}
+
 	switch outputFormat {
 	case "ascii@escape":
 		return fmt.Sprintf("%s", shellescape.Quote(Coerce(dk, keyLen)))

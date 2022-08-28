@@ -14,6 +14,7 @@ func TestHelloName(t *testing.T) {
 		"abc",
 		"abc",
 		"abc",
+		"sha512",
 		1000,
 		32,
 	}
