@@ -47,7 +47,22 @@ than keys without encryption passphrase.
 - blinking yubikey lights
 - more KDF juice
 - when outputting as ascii, it might happen that several hundred bytes of input do not contain printable characters, this MUST be mitigated
+    - when such an unprintable char is received it will be rejected
+    - currently there is a mitigation but no prevention:
+        - we generate 2x as much bytes and discard what does not fit
+        - this is assuming we can fit the requested bytes, though
+        - unlikely as it sounds:
+        - secret with only empty bytes is possible and that would break the security
+        - for such a case a prevention is planned, but not properly implemented
 - audit
+
+## contributions 
+> are always welcome
+
+- leave an issue if you are missing something
+- raise a problem if you see one
+- suggest expected usecases
+- `<3`
 
 ## installation
 
