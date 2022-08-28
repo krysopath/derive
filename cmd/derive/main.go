@@ -63,7 +63,7 @@ func init() {
 		w := flag.CommandLine.Output()
 		fmt.Fprintf(
 			w,
-			"derive %s: This is not helpful.\n\nderive [FLAGS] [topic]\n\nFlags:\n", version,
+			"derive %s: This is not helpful.\n\nderive [FLAGS] [slot]\n\nFlags:\n", version,
 		)
 		flag.VisitAll(func(f *flag.Flag) {
 			fmt.Fprintf(w, "\t[-%s %s] \t%v\n", f.Name, f.Value, f.Usage)
@@ -76,14 +76,12 @@ func init() {
 	flag.StringVar(&kdfFunction, "k", "pbkdf2", "kdf function for deriving key")
 	flag.StringVar(&keyVersion, "v", "1000", "'versioned' key ")
 	flag.StringVar(&outputFormat, "f", "bytes", "key output format: bytes|base64|hex|ascii|ascii@shell")
-	//flag.Parse()
+	flag.Parse()
 	if flag.NArg() == 1 {
 		kdfPurpose = flag.Arg(0)
 	}
 }
 
 func main() {
-	flag.Parse()
-	result := Run(flag.Args())
-	fmt.Fprintln(out, result)
+	fmt.Fprintln(out, Run(flag.Args()))
 }
