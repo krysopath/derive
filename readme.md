@@ -41,7 +41,7 @@ than keys without encryption passphrase.
 ## installation
 
 ```
-DERIVE_SALT=$(openssl rand 32)
+DERIVE_SALT=$(openssl rand -base64 48)
 go install github.com/krysopath/derive/cmd/derive@v0
 cat <<EOF >> ~/.bashrc
 export DERIVE_SALT=$DERIVE_SALT
