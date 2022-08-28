@@ -5,6 +5,7 @@ import (
 	"crypto/sha512"
 	"fmt"
 	"hash"
+	"time"
 
 	"golang.org/x/crypto/pbkdf2"
 )
@@ -24,6 +25,19 @@ var (
 type PBKDF2Opts struct {
 	Passphrase, Salt, Purpose, Version, Hash string
 	Rounds, KeyLen                           int
+}
+
+func (o *PBKDF2Opts) RawData() map[string]interface{} {
+	return map[string]interface{}{
+		"Salt":    o.Salt,
+		"Purpose": o.Purpose,
+		"Version": o.Version,
+		"Hash":    o.Hash,
+		"Rounds":  o.Rounds,
+		"KeyLen":  o.KeyLen,
+		"Kdf":     "pbkdf2",
+		"Last":    time.Now().Unix(),
+	}
 }
 
 func NewPBKDF2(opts PBKDF2Opts) []byte {

@@ -16,7 +16,7 @@ minor:
 patch:
 	@set -e;\
 	export NEW=$$(echo $(TAG) | semver -release patch| jq -r .canonical | tee /dev/stderr); \
-	git tag -m "$$NEW patch release" $$NEW
+	git tag -m "$$NEW patch release" --sign $$NEW
 semver:
 	@git tag -f -m '$(TAG)' "$$(echo '$(SEMVERS)' | jq -r .major | tee /dev/stderr)"
 	@git tag -f -m '$(TAG)' "$$(echo '$(SEMVERS)' | jq -r .majorminor | tee /dev/stderr )"
