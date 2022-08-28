@@ -1,16 +1,13 @@
 package main
 
 import (
-	"encoding/base64"
 	"flag"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
 	"github.com/krysopath/derive/app"
-	"github.com/krysopath/derive/inputs"
-	"github.com/krysopath/derive/kdf"
-	"gopkg.in/alessio/shellescape.v1"
 )
 
 var (
@@ -23,42 +20,10 @@ var (
 	outputFormat string
 	version      string
 	out          io.Writer = os.Stdout
+	homeDir      string
 )
 
-func Run(args []string) string {
-	salt, pass, err := inputs.Credentials()
-	if err != nil {
-		panic(err)
-	}
-	var dk []byte
-	switch kdfFunction {
-	case "pbkdf2":
-		dk = kdf.NewPBKDF2(kdf.PBKDF2Opts{
-			Passphrase: pass,
-			Salt:       salt,
-			Purpose:    kdfPurpose,
-			Version:    keyVersion,
-			Rounds:     kdfRounds,
-			KeyLen:     keyLen * 2,
-		})
-	default:
-		panic(fmt.Sprintf("err: unknown kdf: %s", kdfFunction))
-	}
-	switch outputFormat {
-	case "ascii@escape":
-		return fmt.Sprintf("%s", shellescape.Quote(app.Coerce(dk, keyLen)))
-	case "ascii":
-		return fmt.Sprintf("%s", app.Coerce(dk, keyLen))
-	case "hex":
-		return fmt.Sprintf("%X", dk[:keyLen])
-	case "base64":
-		return fmt.Sprintf("%s", base64.RawStdEncoding.EncodeToString(dk[:keyLen]))
-	default:
-		return fmt.Sprintf("%s", dk[:keyLen])
-	}
-}
-
-func init() {
+func parseFlags() {
 	flag.Usage = func() {
 		w := flag.CommandLine.Output()
 		fmt.Fprintf(
@@ -82,6 +47,23 @@ func init() {
 	}
 }
 
+func init() {
+	var err error
+	homeDir, err = os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	homeDir = filepath.Join(homeDir, ".derive.yaml")
+	parseFlags()
+}
+
+func run() string {
+	cfg := app.NewConfig(homeDir)
+	return cfg.Run(
+		kdfFunction, kdfHash, kdfPurpose, keyVersion, outputFormat, kdfRounds, keyLen,
+	)
+}
+
 func main() {
-	fmt.Fprintln(out, Run(flag.Args()))
+	fmt.Fprintln(out, run())
 }
