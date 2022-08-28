@@ -6,6 +6,8 @@ is an
 
 based on true random wisdom from `xkcd-pass`
 
+## rationale
+
 The idea of this is to implement a scriptable way for adding secret keys to
 keyring agents. Solutions recommended on the web often forget, that on
 multiuser systems the process tree discloses command arguments to every logged
