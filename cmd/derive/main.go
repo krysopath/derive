@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"flag"
 	"fmt"
+	"io"
 	"os"
 
 	"github.com/krysopath/derive/app"
@@ -21,7 +22,41 @@ var (
 	keyVersion   string
 	outputFormat string
 	version      string
+	out          io.Writer = os.Stdout
 )
+
+func Run(args []string) string {
+	salt, pass, err := inputs.Credentials()
+	if err != nil {
+		panic(err)
+	}
+	var dk []byte
+	switch kdfFunction {
+	case "pbkdf2":
+		dk = kdf.NewPBKDF2(kdf.PBKDF2Opts{
+			Passphrase: pass,
+			Salt:       salt,
+			Purpose:    kdfPurpose,
+			Version:    keyVersion,
+			Rounds:     kdfRounds,
+			KeyLen:     keyLen * 2,
+		})
+	default:
+		panic(fmt.Sprintf("err: unknown kdf: %s", kdfFunction))
+	}
+	switch outputFormat {
+	case "ascii@escape":
+		return fmt.Sprintf("%s", shellescape.Quote(app.Coerce(dk, keyLen)))
+	case "ascii":
+		return fmt.Sprintf("%s", app.Coerce(dk, keyLen))
+	case "hex":
+		return fmt.Sprintf("%X", dk[:keyLen])
+	case "base64":
+		return fmt.Sprintf("%s", base64.RawStdEncoding.EncodeToString(dk[:keyLen]))
+	default:
+		return fmt.Sprintf("%s", dk[:keyLen])
+	}
+}
 
 func init() {
 	flag.Usage = func() {
@@ -41,40 +76,14 @@ func init() {
 	flag.StringVar(&kdfFunction, "k", "pbkdf2", "kdf function for deriving key")
 	flag.StringVar(&keyVersion, "v", "1000", "'versioned' key ")
 	flag.StringVar(&outputFormat, "f", "bytes", "key output format: bytes|base64|hex|ascii|ascii@shell")
-	flag.Parse()
+	//flag.Parse()
 	if flag.NArg() == 1 {
 		kdfPurpose = flag.Arg(0)
 	}
 }
 
 func main() {
-	salt, pass, err := inputs.Credentials()
-	if err != nil {
-		panic(err)
-	}
-	var dk []byte
-	switch kdfFunction {
-	case "pbkdf2":
-		dk = kdf.NewPBKDF2(kdf.PBKDF2Opts{
-			Passphrase: pass,
-			Salt:       salt,
-			Purpose:    kdfPurpose,
-			Version:    keyVersion,
-			Rounds:     kdfRounds,
-			KeyLen:     keyLen * 2,
-		})
-	}
-	switch outputFormat {
-	case "ascii@escape":
-		fmt.Fprintf(os.Stdout, "%s", shellescape.Quote(app.Coerce(dk, keyLen)))
-	case "ascii":
-		fmt.Fprintf(os.Stdout, "%s", app.Coerce(dk, keyLen))
-	case "hex":
-		fmt.Fprintf(os.Stdout, "%X", dk[:keyLen])
-	case "base64":
-		fmt.Fprintf(os.Stdout, "%s", base64.RawStdEncoding.EncodeToString(dk[:keyLen]))
-	default:
-		fmt.Fprintf(os.Stdout, "%s", dk[:keyLen])
-	}
-
+	flag.Parse()
+	result := Run(flag.Args())
+	fmt.Fprintln(out, result)
 }
