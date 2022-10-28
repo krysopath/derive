@@ -4,8 +4,9 @@ go 1.16
 
 require (
 	github.com/alessio/shellescape v1.4.1
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
-	golang.org/x/crypto v0.0.0-20220817201139-bc19a97f63c8
-	golang.org/x/term v0.0.0-20220722155259-a9ba230a4035
-	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0 // indirect
+	github.com/mitchellh/mapstructure v1.5.0
+	golang.org/x/crypto v0.1.0
+	golang.org/x/term v0.1.0
+	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
+	gopkg.in/yaml.v1 v1.0.0-20140924161607-9f9df34309c0
 )
